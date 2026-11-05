@@ -43,7 +43,7 @@ The integration branch was created *directly from the official stable commit*, n
 ## Latest CI follow-up (2026-11-06)
 - Upstream PR-check run `42082288309` failed on panel-specific `go vet`: `internal/feature/muse/gadget.go:33` declared `const StatePath = layout.StateDir + "/muse.json"`, but `layout.StateDir` is a variable on `panel` builds.
 - Corrected `StatePath` to `var`, matching the upstream `layout` path definitions. This preserves the existing pairing filename and directory; it does **not** change the data or device state.
-- The extended PR check must be rerun before claiming all device-tag combinations green.
+- The follow-up PR check `42125847545` confirmed the pairing `StatePath` error was resolved, then found the same `const`/runtime-directory mismatch in `feature/display/render_avatar.go`. That `avatarDir` has also been changed to `var` without changing its value or persistent data. The next full PR check will validate all Build Tags.
 
 ## Outstanding integration
 - [x] All `go test ./...` and ARMv7 daemon compile green on pinned v1.6.26 (run `42079152900`, Go 1.27 module).
