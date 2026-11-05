@@ -3,6 +3,7 @@ package setup
 import (
 	"context"
 	"crypto/subtle"
+	"encoding/json"
 	"fmt"
 	"html"
 	"log/slog"
@@ -18,6 +19,7 @@ import (
 	"github.com/HuskerMinion/techo5/echod/internal/feature/api"
 	"github.com/HuskerMinion/techo5/echod/internal/feature/diag"
 	"github.com/HuskerMinion/techo5/echod/internal/feature/home"
+	gadget "github.com/HuskerMinion/techo5/echod/internal/feature/muse"
 	"github.com/HuskerMinion/techo5/echod/internal/feature/media"
 	"github.com/HuskerMinion/techo5/echod/internal/feature/timezone"
 	"github.com/HuskerMinion/techo5/echod/internal/feature/web"
@@ -199,7 +201,12 @@ func (f *Feature) state(w http.ResponseWriter, r *http.Request) {
 	_, in := f.session(r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store")
-	fmt.Fprintf(w, `{"in":%t,"waiting":%t}`+"\n", in, f.Waiting())
+	state := map[string]any{"in": in, "waiting": f.Waiting()}
+	if in {
+		status := gadget.Get().Status()
+		state["muse"], state["muse_phase"] = museWords(status), status.Phase.String()
+	}
+	_ = json.NewEncoder(w).Encode(state)
 }
 
 // save takes the forms. Every write names the setting it changes; nothing here touches keys, runs a
