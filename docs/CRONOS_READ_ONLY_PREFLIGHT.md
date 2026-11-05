@@ -12,6 +12,10 @@ cat /proc/meminfo | head -n 6
 df -h / /data /store 2>/dev/null
 command -v slotctl
 slotctl status
+/usr/local/bin/techo5 --version
+# Do not display contents: existence and size only
+test -f /data/misc/techo5/muse.json && stat -c 'pairing state bytes: %s' /data/misc/techo5/muse.json
+test -d /data/misc/techo5/muse-avatar && du -sh /data/misc/techo5/muse-avatar
 ```
 
 Some paths or tools may differ by installed firmware. Report missing paths/commands rather than attempting automatic recovery. Do not run `slotctl mkstore`, `install`, `switch`, `commit`, `rollback` or a reboot.
