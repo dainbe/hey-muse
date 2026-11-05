@@ -341,6 +341,11 @@ func saveBrain(r *http.Request) string {
 	if b.Mode == config.BrainMuse && !willHave["sdk"] {
 		return "answering through Muse needs the Muse SDK token"
 	}
+	// Japanese TTS must not silently select the built-in English-only Pico.
+	if b.Mode == config.BrainMuse && b.Language == "ja" &&
+		(!willHave["speechkey"] || speech.Voice(b.Muse.Speech.Voice) == speech.BuiltIn) {
+		return "Japanese answers need a Japanese-capable speech endpoint key and voice; built-in Pico is English-only"
+	}
 	// The speech key is needed only where nothing else can speak: with no key, or with the built-in
 	// voice chosen, the device's own voice is all there is.
 	if b.Mode == config.BrainMuse && !builtInVoice() && (!willHave["speechkey"] || speech.Voice(b.Muse.Speech.Voice) == speech.BuiltIn) {
