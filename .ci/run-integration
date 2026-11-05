@@ -5,3 +5,5 @@ Second checkpoint: BlueZ Peripheral + Config export secret handling; no device i
 Third compile checkpoint: isolated Muse audio buffers, optional avatar, experimental Usage deferred.
 
 Fourth checkpoint: validated source integration + avatar and Japanese-language handling.
+
+Fifth checkpoint: optional Wyoming STT Japanese text routing and fail-closed tests.
