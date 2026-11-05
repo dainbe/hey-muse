@@ -3,11 +3,6 @@ name: Manual unsigned cronos rootfs preview
 # Explicitly manual. This workflow DOES NOT install, sign or publish firmware.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - integration/techo5-v1.6.26-muse
-    paths:
-      - '.ci/run-rootfs-preview'
 
 permissions:
   contents: read
