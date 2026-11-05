@@ -3,3 +3,5 @@ One-time public runner build of an unsigned preview tarball (no deploy, sign, fl
 Second preflight: retry after synchronizing Muse pairing lifecycle test and isolating OTA feed to dainbe/hey-muse.
 
 Third bounded build checkpoint: use Ubuntu 26.04 qemu-user-binfmt provider for ARMv7 rootfs packaging.
+
+Fourth bounded preview: reuse SHA256-verified official v1.6.26 native helpers; no rebuild of Zig/FFmpeg/Tailscale on CI.
