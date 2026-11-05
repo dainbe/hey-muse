@@ -40,6 +40,11 @@ The integration branch was created *directly from the official stable commit*, n
 - **Never install** unsigned preview output before hardware safety gate and explicit approval; no physical Echo STT/TTS operation is verified.
 - Workflow `.github/workflows/port-ci.yml` performs Go tests and ARMv7 compile only; no signing, auto-installation or artifact upload. Trigger manually or by editing `.ci/run-integration`.
 
+## Latest CI follow-up (2026-11-06)
+- Upstream PR-check run `42082288309` failed on panel-specific `go vet`: `internal/feature/muse/gadget.go:33` declared `const StatePath = layout.StateDir + "/muse.json"`, but `layout.StateDir` is a variable on `panel` builds.
+- Corrected `StatePath` to `var`, matching the upstream `layout` path definitions. This preserves the existing pairing filename and directory; it does **not** change the data or device state.
+- The extended PR check must be rerun before claiming all device-tag combinations green.
+
 ## Outstanding integration
 - [x] All `go test ./...` and ARMv7 daemon compile green on pinned v1.6.26 (run `42079152900`, Go 1.27 module).
 - [ ] Preserve upstream display features and test Muse avatar during a turn.
