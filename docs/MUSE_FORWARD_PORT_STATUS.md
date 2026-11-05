@@ -26,14 +26,18 @@ The integration branch was created *directly from the official stable commit*, n
 ## Compile and test status
 - First manually gated GitHub Actions run `42076036917`: **failed**, missing BlueZ Peripheral and two unredacted settings export secrets; both addressed.
 - Second run `42076691591`: **failed** because of old Muse `utterance` dependency and an optional Usage screen package, fixed in subsequent changes.
-- Third checkpoint to run **once after integration changes** (not on every push); outcome pending as of this document. No device or end-to-end voice verification yet.
+- Third run `42077501584`: failed on two original Muse Setup assertions (English built-in voice warning and pairing status JSON), fixed.
+- Fourth run `42078299872`: **success** — Go unit tests and ARMv7 cross-build.
+- Fifth run `42079152900`: **success** — after adding swappable Wyoming STT → Muse text requests, fail-closed audio handling and offline unit tests. These are source/compile validations only; no device or end-to-end speech verification.
+- One manual-gated, unsigned preview rootfs build `42079486348` triggered after green CI; do **not** install its artifact without independent hardware safety gate and approval.
 - Workflow `.github/workflows/port-ci.yml` performs Go tests and ARMv7 compile only; no signing, auto-installation or artifact upload. Trigger manually or by editing `.ci/run-integration`.
 
 ## Outstanding integration
-- [ ] All `go test ./...` and ARMv7 daemon compile green; review for Go 1.27 compatibility.
+- [x] All `go test ./...` and ARMv7 daemon compile green on pinned v1.6.26 (run `42079152900`, Go 1.27 module).
 - [ ] Preserve upstream display features and test Muse avatar during a turn.
 - [ ] Verify local Wake word paths and Muse pairing client on actual `cronos`.
-- [ ] Japanese STT: initially Muse's service or external Wyoming; then replaceable local models (Moonshine Tiny/Base, independent options) after device measurements.
+- [x] Optional Wyoming STT text path implemented and tested offline (including no audio upload after local STT failure).
+- [ ] Japanese STT model deployment and real-device benchmark (Moonshine Tiny/Base, independent alternatives) pending.
 - [ ] Japanese TTS: set a trusted Japanese-capable speech endpoint first. Built-in Pico is **English-only**, cannot serve as Japanese fallback. Investigate local Open JTalk/other engines separately.
 - [ ] Document full rootfs packaging, signing, migration and rollback; treat trusted release keys as versioned trust roots and do not embed a private signing key or token.
 - [ ] Before install: read-only `slotctl status`, free space, kernel/arch, current update source, pairing state, and backupability; require explicit owner approval for **every write**, reboot and pairing change.
