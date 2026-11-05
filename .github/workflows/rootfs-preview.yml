@@ -30,16 +30,7 @@ jobs:
         run: |
           sudo apt-get update
           # Ubuntu 26.04 exposes qemu-user-static as a virtual package.
-          sudo apt-get install -y --no-install-recommends qemu-user-binfmt binfmt-support uidmap
-          # The rootfs builder needs a user namespace with enough mapped IDs
-          # to preserve Alpine system-user ownership (e.g. group 42).
-          account="$(id -un)"
-          if ! grep -q "^$account:" /etc/subuid; then sudo usermod --add-subuids 200000-265535 "$account"; fi
-          if ! grep -q "^$account:" /etc/subgid; then sudo usermod --add-subgids 200000-265535 "$account"; fi
-          test -x /usr/bin/newuidmap && test -x /usr/bin/newgidmap
-          tempdir="$(mktemp -d)"
-          unshare -Ur --map-auto sh -c 'touch "$1/check"; chown 0:42 "$1/check"; test "$(stat -c %g "$1/check")" = 42' sh "$tempdir"
-          rm -rf "$tempdir"
+          sudo apt-get install -y --no-install-recommends qemu-user-binfmt binfmt-support
       - name: Fetch public rootfs inputs
         run: |
           python3 tools/fetch-inputs.py --device show
@@ -79,7 +70,7 @@ jobs:
 
       - name: Build unsigned rootfs for inspection
         run: |
-          bash tools/linux/deploy-rootfs.sh --out build/rootfs.tar.gz --version v1.6.26-muse.preview
+          TECHO5_CI_ROOTFS_SUDO=1 bash tools/linux/deploy-rootfs.sh --out build/rootfs.tar.gz --version v1.6.26-muse.preview
           sha256sum build/rootfs.tar.gz > build/SHA256SUMS
           tar -tzf build/rootfs.tar.gz > build/CONTENTS.txt
       - name: Upload short-lived preview artifact
