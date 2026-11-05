@@ -51,6 +51,7 @@ type viaMuse struct {
 	voice func() speech.Voice // the one the settings choose, asked for every reply
 	speak speakFunc
 	post  func(event)
+	recognize func(context.Context, config.Brain, []byte) (string, error) // testable STT provider
 	utterance
 }
 
@@ -100,7 +101,12 @@ func speakMuse(ctx context.Context, v speech.Voice, text string, out func(sample
 // recognizer's underlying inference engine. A failed/empty local STT is handled
 // here without silently sending the microphone recording to the cloud.
 func (m *viaMuse) ask(ctx context.Context, pcm []byte, on func(muse.ReplyEvent)) (muse.Reply, error) {
-	b := config.Get().Brain
+	return m.askWithBrain(ctx, config.Get().Brain, pcm, on)
+}
+
+// askWithBrain can be exercised with a deterministic STT provider and a fake
+// Muse link; no network or device microphone is needed for the unit tests.
+func (m *viaMuse) askWithBrain(ctx context.Context, b config.Brain, pcm []byte, on func(muse.ReplyEvent)) (muse.Reply, error) {
 	if strings.TrimSpace(b.STT) == "" {
 		wav := wavFile(media.Normalize(endpoint.Trim(samplesOf(pcm))))
 		return m.link.Ask(ctx, wav, on)
@@ -109,7 +115,9 @@ func (m *viaMuse) ask(ctx context.Context, pcm []byte, on func(muse.ReplyEvent))
 	if !ok {
 		return muse.Reply{Text: "音声認識を利用できません。"}, nil
 	}
-	text, err := transcribe(ctx, b, pcm)
+	recognize := m.recognize
+	if recognize == nil { recognize = transcribe }
+	text, err := recognize(ctx, b, pcm)
 	if ctx.Err() != nil {
 		return muse.Reply{}, ctx.Err()
 	}
