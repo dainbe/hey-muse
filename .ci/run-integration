@@ -1,0 +1,1 @@
+Compile-only Go verification checkpoint for official TECHO5 v1.6.26 + initial Muse port. No firmware packaging, signing, flashing or secrets.
