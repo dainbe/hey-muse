@@ -217,10 +217,10 @@ func (v *Voice) Run(ctx context.Context) error {
 	return nil
 }
 
-// Ready reports whether Home Assistant has a voice pipeline listening. Wake detection runs before
-// that happens, but nothing can be done with a detection until it does, so this is what the device
-// shows on the ring while it comes up.
-func (v *Voice) Ready() bool { return v.vs.Subscribed() || config.Get().Brain.Direct() }
+// Ready reports whether Home Assistant has a voice pipeline listening, or the device answers on its
+// own. Wake detection runs before that happens, but nothing can be done with a detection until it
+// does, so this is what the device shows on the ring while it comes up.
+func (v *Voice) Ready() bool { return v.vs.Subscribed() || config.Get().Brain.Standalone() }
 
 // HomeAssistant reports whether Home Assistant itself has a voice pipeline listening, whatever the
 // brain. Ready is always true with a direct brain, so it says nothing about whether Home Assistant
