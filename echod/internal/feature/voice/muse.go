@@ -35,6 +35,12 @@ type museLink interface {
 // speakFunc says text in voice v, calling out with the samples at 16 kHz as they arrive.
 type speakFunc func(ctx context.Context, v speech.Voice, text string, out func(samples []int16) error) error
 
+// museTextLink is available for text-only turns after on-device/local Wyoming STT.
+// Audio is not sent to Muse when the user selected a local recognizer.
+type museTextLink interface {
+	AskText(context.Context, string, func(muse.ReplyEvent)) (muse.Reply, error)
+}
+
 // museChunk is the least audio handed to the conversation at a time, in 16 kHz samples: 100 ms. A
 // voice arrives in reads of a few kilobytes, and the reply's queue holds chunkQueue of whatever
 // it is given, so each read must not take a slot of its own.
@@ -90,6 +96,35 @@ func speakMuse(ctx context.Context, v speech.Voice, text string, out func(sample
 	}.Speak(ctx, v, text, out)
 }
 
+// ask selects a local Wyoming recognizer when configured, independently of the
+// recognizer's underlying inference engine. A failed/empty local STT is handled
+// here without silently sending the microphone recording to the cloud.
+func (m *viaMuse) ask(ctx context.Context, pcm []byte, on func(muse.ReplyEvent)) (muse.Reply, error) {
+	b := config.Get().Brain
+	if strings.TrimSpace(b.STT) == "" {
+		wav := wavFile(media.Normalize(endpoint.Trim(samplesOf(pcm))))
+		return m.link.Ask(ctx, wav, on)
+	}
+	link, ok := m.link.(museTextLink)
+	if !ok {
+		return muse.Reply{Text: "音声認識を利用できません。"}, nil
+	}
+	text, err := transcribe(ctx, b, pcm)
+	if ctx.Err() != nil {
+		return muse.Reply{}, ctx.Err()
+	}
+	if err != nil {
+		slog.Warn("muse: configured speech recognizer failed", "err", err)
+		return muse.Reply{Text: "音声認識を利用できません。もう一度お試しください。"}, nil
+	}
+	text = strings.TrimSpace(text)
+	if text == "" {
+		return muse.Reply{Text: "聞き取れませんでした。もう一度お願いします。"}, nil
+	}
+	on(muse.Heard{Text: text})
+	return link.AskText(ctx, text, on)
+}
+
 // answer asks Muse and reports the way Home Assistant's pipeline events are reported.
 //
 // The first Settled is taken as the whole answer and spoken there and then, inside the callback,
@@ -103,11 +138,10 @@ func (m *viaMuse) answer(ctx context.Context, pcm []byte) {
 	}
 
 	start := time.Now()
-	wav := wavFile(media.Normalize(endpoint.Trim(samplesOf(pcm))))
 	var heardAt, repliedAt, firstAudioAt time.Duration
 	var spoken bool
 	var speechErr error
-	reply, err := m.link.Ask(ctx, wav, func(e muse.ReplyEvent) {
+	reply, err := m.ask(ctx, pcm, func(e muse.ReplyEvent) {
 		if ctx.Err() != nil {
 			return
 		}
