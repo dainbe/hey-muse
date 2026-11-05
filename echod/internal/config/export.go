@@ -105,6 +105,7 @@ func servers(c Config) []ServerChange {
 		{What: "The assistant's chat model", New: c.Brain.LLM},
 		{What: "The assistant's web search", New: c.Brain.Search},
 		{What: "The assistant's page reader", New: c.Brain.Reader},
+		{What: "Muse speech provider", New: c.Brain.Muse.Speech.Base},
 		{What: "The dashboard server", New: c.Dashboard.Server},
 		{What: "Music Assistant", New: c.MusicAssistant.URL},
 		{What: "Immich", New: c.Home.Immich.Server},
@@ -273,6 +274,8 @@ func jsonName(f reflect.StructField) string {
 // ClearSecrets empties every secret in c.
 func ClearSecrets(c *Config) {
 	c.Brain.Key = ""
+	c.Brain.Muse.SDKToken = ""
+	c.Brain.Muse.Speech.Key = ""
 	c.Dashboard.Key = ""
 	c.MusicAssistant.Token = ""
 	c.Home.HouseWord = ""
@@ -314,6 +317,9 @@ func KeepSecrets(c *Config, from Config) (reenter []string) {
 		}
 	}
 	keep(&c.Brain.Key, from.Brain.Key, c.Brain.LLM == from.Brain.LLM, "the assistant's key")
+	keep(&c.Brain.Muse.SDKToken, from.Brain.Muse.SDKToken, true, "Muse SDK token")
+	keep(&c.Brain.Muse.Speech.Key, from.Brain.Muse.Speech.Key,
+		c.Brain.Muse.Speech.Base == from.Brain.Muse.Speech.Base, "Muse speech endpoint key")
 	keep(&c.Dashboard.Key, from.Dashboard.Key, c.Dashboard.Server == from.Dashboard.Server, "the dashboard server's key")
 	keep(&c.MusicAssistant.Token, from.MusicAssistant.Token, c.MusicAssistant.URL == from.MusicAssistant.URL, "Music Assistant's token")
 	keep(&c.Home.Immich.Key, from.Home.Immich.Key, c.Home.Immich.Server == from.Home.Immich.Server, "Immich's key")
