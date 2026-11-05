@@ -30,7 +30,7 @@ func init() {
 // StatePath is where the pairing lives: the identity, the device tokens and whether the SDK token
 // has been reported. Not state.json, which the diagnostics bundle summarizes and other features
 // write; this file holds nothing but Muse's and is read by nothing but this package.
-const StatePath = layout.StateDir + "/muse.json"
+var StatePath = layout.StateDir + "/muse.json"
 
 // Phase is where the device stands with Muse. It is the whole of the feature's state: being paired,
 // pairing, connecting and being online are phases rather than flags, and reconcile is the one place
