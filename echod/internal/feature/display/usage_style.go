@@ -1,4 +1,4 @@
-//go:build !dot && !spot
+//go:build muse_usage_experimental && !dot && !spot
 
 package display
 
