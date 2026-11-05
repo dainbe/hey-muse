@@ -12,7 +12,7 @@ Build an independent `cronos` firmware from the **official stable TECHO5 code**,
 | Original Hey Muse `muse` | `1b574cca0a49cb4aa36a69600663434fd2d313fa` |
 | Common ancestor | `8a4d96cdec7d76c8c80b1e203093b4efc214ec02` |
 
-The integration branch was created *directly from the official stable commit*, not from the Muse fork. The original `muse` branch is untouched and protected. Initial diff inspection found 174 Muse-changed files, of which 34 were also changed upstream.
+The integration branch was created *directly from the official stable commit*, not from the Muse fork. `baseline/techo5-v1.6.26` pins the same official commit, and Draft PR #2 targets that baseline for a reviewable official-to-Muse diff. The original `muse` branch is untouched and protected. Initial diff inspection found 174 Muse-changed files, of which 34 were also changed upstream.
 
 ## Implemented on this integration branch
 - Ported 122 isolated Muse-only source/assets files from original fork: Muse SDK, pairing, speech client, avatar, wakeword models and test suites.
@@ -30,7 +30,10 @@ The integration branch was created *directly from the official stable commit*, n
 - Fourth run `42078299872`: **success** — Go unit tests and ARMv7 cross-build.
 - Fifth run `42079152900`: **success** — after adding swappable Wyoming STT → Muse text requests, fail-closed audio handling and offline unit tests. These are source/compile validations only; no device or end-to-end speech verification.
 - Unsigned preview run `42079486348` failed on a Muse pairing test race, fixed by waiting for fixture `Run` startup. Next `42079935858` passed Go tests but Ubuntu 26.04 runner no longer offers a concrete `qemu-user-static` package; changed to `qemu-user-binfmt`, confirmed by official Ubuntu package index.
-- Third bounded unsigned preview run `42080449780` launched after fixes; packaging result pending at this update. **Never install** an unsigned preview artifact before hardware safety gate and explicit approval.
+- Rootfs preview `42080449780`: verified Go tests, ARM cross-compile, QEMU package setup and public inputs, but failed because mandatory AirPlay 2 helper binaries were not yet staged.
+- Rootfs preview `42081277834`: verified official `rootfs-v1.6.26.tar.gz` with its published SHA256SUMS; extracted official AirPlay 2, FFmpeg, Tailscale helpers (confirmed ARMv7/arm64). Hit GitHub runner UID/GID ownership restrictions during Alpine rootfs extraction.
+- Rootfs preview `42081730021`: failed a CI-only namespace `chown 0:42` preflight. Left normal WSL rootless mode unchanged; explicit temporary GitHub Runner sudo build mode now available.
+- Rootfs preview `42082277352` launched using that isolated runner-only mode, result pending at this update. **Never install** unsigned preview output before hardware safety gate and explicit approval.
 - Workflow `.github/workflows/port-ci.yml` performs Go tests and ARMv7 compile only; no signing, auto-installation or artifact upload. Trigger manually or by editing `.ci/run-integration`.
 
 ## Outstanding integration
@@ -45,10 +48,10 @@ The integration branch was created *directly from the official stable commit*, n
 - [ ] Hardware verification: voice input -> Japanese transcript -> Japanese Muse answer -> Japanese speaker output; test reconnect/OTA fallback; memory and latency.
 
 ## Firmware trust: important
-The official base's `internal/update/trust.go` trusts **official** release signatures and `releases_cronos.go` points at official releases. The original Muse fork has **different** trust roots and update feed. A custom v1.6.26-derived image must not be distributed or auto-updated until an independent owner-controlled signing key and release channel are designed, recovery is validated, and the existing user's A/B slot/pairing files have been backed up. Signing and flashing are strictly separate approval gates.
+The official base's `internal/update/trust.go` still trusts **official** release signatures, but the integration branch changes `releases_cronos.go` to this fork's currently empty release feed so that it cannot automatically replace Muse with the official non-Muse firmware. The original Muse fork has **different** trust roots and update feed. A custom v1.6.26-derived image must not be distributed or auto-updated until an independent owner-controlled signing key and release channel are designed, recovery is validated, and the existing user's A/B slot/pairing files have been backed up. Signing and flashing are strictly separate approval gates.
 
 ## Resource and safety
-Public repository standard GitHub-hosted Linux runners do not consume private-repository included-minute quota, but we still use one manual-gated integration test per milestone. Other commits carry `[skip ci]`. No release builds, no CI artifacts and no remote-server changes until explicitly authorized.
+Public repository standard GitHub-hosted Linux runners do not consume private-repository included-minute quota, but we minimize runs. `port-ci.yml` is explicitly sentinel-gated, and `rootfs-preview.yml` has been restored to manual-only after bounded runs, with a 1-day artifact retention and unsigned DO-NOT-INSTALL label. There are no public releases, signed firmware, or remote-server changes.
 
 Current Echo firmware (user reported) is `v1.2.0-muse.3`; this repository work **does not change the device**. The persistent Muse pairing state is `layout.StateDir + "/muse.json"`; inspect/backup securely on-device only, never print or commit it.
 
@@ -56,4 +59,4 @@ Current Echo firmware (user reported) is `v1.2.0-muse.3`; this repository work *
 Once compile and code review are complete, present a non-destructive list of hardware inspection commands and explain exactly what the future firmware write will change, what data is preserved, and how to recover. Owner must explicitly approve install/slot switch/reboot. Maintain this document with real test evidence, not predictions.
 
 ## OTA isolation
-This branch now points `releases_cronos.go` at the fork; owner-controlled signing trust remains pending.
+This branch points `releases_cronos.go` at this fork's empty Release feed; owner-controlled signing and migration from the old Muse trust key remain pending.
