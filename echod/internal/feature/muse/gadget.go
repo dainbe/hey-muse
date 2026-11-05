@@ -234,6 +234,17 @@ func (f *Feature) Ask(ctx context.Context, wav []byte, on func(muse.ReplyEvent))
 	return r.c.Ask(ctx, muse.VoiceNote(wav), on)
 }
 
+// AskText sends local STT transcription to Muse without uploading microphone audio.
+func (f *Feature) AskText(ctx context.Context, text string, on func(muse.ReplyEvent)) (muse.Reply, error) {
+	f.mu.Lock()
+	r := f.client
+	f.mu.Unlock()
+	if r == nil {
+		return muse.Reply{}, muse.ErrOffline
+	}
+	return r.c.Ask(ctx, muse.Text(text), on)
+}
+
 func (f *Feature) Status() Status {
 	f.mu.Lock()
 	defer f.mu.Unlock()
