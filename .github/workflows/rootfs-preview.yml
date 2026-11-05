@@ -1,0 +1,52 @@
+name: Manual unsigned cronos rootfs preview
+
+# Explicitly manual. This workflow DOES NOT install, sign or publish firmware.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cronos-rootfs-preview
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Checkout integration branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Go toolchain from module
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: echod/go.mod
+          cache-dependency-path: echod/go.sum
+      - name: Verify source
+        working-directory: echod
+        run: go test ./...
+      - name: Install rootfs cross-build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends qemu-user-static binfmt-support
+      - name: Fetch public rootfs inputs
+        run: |
+          python3 tools/fetch-inputs.py --device show
+          mkdir -p "$HOME/apk" build
+          cp inputs/apk.static "$HOME/apk/apk.static"
+      - name: Build unsigned rootfs for inspection
+        run: |
+          bash tools/linux/deploy-rootfs.sh --out build/rootfs.tar.gz --version v1.6.26-muse.preview
+          sha256sum build/rootfs.tar.gz > build/SHA256SUMS
+          tar -tzf build/rootfs.tar.gz > build/CONTENTS.txt
+      - name: Upload short-lived preview artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: UNSIGNED-DO-NOT-INSTALL-cronos-rootfs-preview
+          path: |
+            build/rootfs.tar.gz
+            build/SHA256SUMS
+            build/CONTENTS.txt
+          retention-days: 1
+          if-no-files-found: error
