@@ -168,7 +168,7 @@ func (m *viaMuse) say(ctx context.Context, text string, start time.Time) (firstA
 	m.post(event{kind: evReplyText, text: text})
 	// An answer that asks something wants one, and gets it without the wake word again: what Home
 	// Assistant's pipeline reports as continue_conversation.
-	if strings.HasSuffix(text, "?") {
+	if strings.HasSuffix(text, "?") || strings.HasSuffix(text, "？") {
 		m.post(event{kind: evContinue})
 	}
 
@@ -193,8 +193,11 @@ func (m *viaMuse) say(ctx context.Context, text string, start time.Time) (firstA
 		})
 	}
 	v := m.voice()
+	if v.Local() && config.Get().Brain.Language == "ja" {
+		return firstAudio, fmt.Errorf("Japanese voice requires a configured Japanese TTS endpoint; built-in Pico is English-only")
+	}
 	err = speak(v)
-	if err != nil && ctx.Err() == nil && !v.Local() && firstAudio == 0 {
+	if err != nil && ctx.Err() == nil && !v.Local() && firstAudio == 0 && config.Get().Brain.Language != "ja" {
 		slog.Warn("muse: the speech endpoint failed, so the answer is in the built-in voice", "voice", v, "err", err)
 		held = held[:0]
 		if lerr := speak(speech.BuiltIn); lerr != nil {
