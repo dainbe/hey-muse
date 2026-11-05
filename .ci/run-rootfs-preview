@@ -1,3 +1,5 @@
 One-time public runner build of an unsigned preview tarball (no deploy, sign, flash, release or keys). Triggered after CI green. Do not repeat without reviewing artifact/storage costs.
 
 Second preflight: retry after synchronizing Muse pairing lifecycle test and isolating OTA feed to dainbe/hey-muse.
+
+Third bounded build checkpoint: use Ubuntu 26.04 qemu-user-binfmt provider for ARMv7 rootfs packaging.
