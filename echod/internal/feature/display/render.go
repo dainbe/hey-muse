@@ -29,6 +29,7 @@ import (
 	"github.com/HuskerMinion/techo5/echod/internal/feature/tessera"
 	"github.com/HuskerMinion/techo5/echod/internal/feature/timer"
 	"github.com/HuskerMinion/techo5/echod/internal/feature/video"
+	"github.com/HuskerMinion/techo5/echod/internal/lib/avatar"
 	"github.com/HuskerMinion/techo5/echod/internal/lib/hass"
 	"github.com/HuskerMinion/techo5/echod/internal/lib/locale"
 	"github.com/HuskerMinion/techo5/echod/internal/lib/rainbow"
@@ -49,6 +50,7 @@ type scene struct {
 	phase   string  // idle, listening, thinking, replying, lingering
 	eq      *eqView // a turn's bars, when turns are drawn as the equalizer
 	cue     string  // a turn's phase, when turns are a cue over the page and phase is idle (turn_cue.go)
+	avatar  *avatar.Set // optional Muse sprite set for turn animation
 	heard   string
 	reply   string
 	said    float64 // how much of the reply the voice has said, 0 to 1 (voice.Spoken)
@@ -339,6 +341,7 @@ type renderer struct {
 
 	// wb is the wave turn screen's working memory, made the first time it is drawn.
 	wb *waveBuf
+	av avatar.Playhead
 
 	// skipDrawn and skipDrawnOffer are the light before an alarm's button as the frame in hand draws
 	// it, by the drawing goroutine alone; skipAt and skipShown are the finished frame's, what a finger
@@ -739,6 +742,10 @@ func (r *renderer) draw(s scene) {
 		return
 	}
 
+	if r.turnAvatar(s) {
+		if s.showVolume { r.volumeBar(s) }
+		return
+	}
 	var behind *image.RGBA // the photo behind the idle page, when it has one
 	switch s.phase {
 	case "listening":
