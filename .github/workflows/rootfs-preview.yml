@@ -29,7 +29,8 @@ jobs:
       - name: Install rootfs cross-build tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends qemu-user-static binfmt-support
+          # Ubuntu 26.04 exposes qemu-user-static as a virtual package.
+          sudo apt-get install -y --no-install-recommends qemu-user-binfmt binfmt-support
       - name: Fetch public rootfs inputs
         run: |
           python3 tools/fetch-inputs.py --device show
