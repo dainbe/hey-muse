@@ -45,6 +45,11 @@ The integration branch was created *directly from the official stable commit*, n
 - Corrected `StatePath` to `var`, matching the upstream `layout` path definitions. This preserves the existing pairing filename and directory; it does **not** change the data or device state.
 - The follow-up PR check `42125847545` confirmed the pairing `StatePath` error was resolved, then found the same `const`/runtime-directory mismatch in `feature/display/render_avatar.go`. That `avatarDir` has also been changed to `var` without changing its value or persistent data. The next full PR check will validate all Build Tags.
 
+## Formatting and device-tag CI follow-up
+- Full PR check `42126780427` completed all `go build` and `go vet` variants (show, dot, dot+donut, spot, panel), including the two corrected variable paths. Its only failure was `gofmt -l` reporting nine integration-edited Go files.
+- A one-time, exact-path formatter workflow `42127654760` applied `gofmt` to only those nine files and committed `523c2d79483fcc2241d89fa211000e1b318f968a` to the integration branch. It did not rebuild/flash firmware or touch baseline/Muse branches.
+- Final PR check after formatting: pending at this documentation commit.
+
 ## Outstanding integration
 - [x] All `go test ./...` and ARMv7 daemon compile green on pinned v1.6.26 (run `42079152900`, Go 1.27 module).
 - [ ] Preserve upstream display features and test Muse avatar during a turn.
