@@ -1,0 +1,1 @@
+Run gofmt only on the nine files listed by failed PR check 42126780427. No firmware build, no release and no device access.
