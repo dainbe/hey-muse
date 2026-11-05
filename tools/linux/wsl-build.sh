@@ -24,7 +24,16 @@ find "$W/in" -type f -name '*.sh' -exec sed -i 's/\r$//' {} +
 # the packages here.
 map=--map-auto
 command -v newuidmap >/dev/null || map=
-unshare -Ur $map sh "$W/in/tools/mkrootfs.sh" -i "$W/in" -o "$W/rootfs.tar.gz" -w "$W" \
-	-V "$VERSION" -z "$TZNAME" -a armv7 -A "$APK"
+if [ "${TECHO5_CI_ROOTFS_SUDO:-}" = "1" ]; then
+	# On GitHub-hosted 26.04, the runner's unprivileged namespace cannot chown
+	# Alpine service groups even with uidmap. An explicitly requested, isolated
+	# CI job may use sudo for rootfs assembly; not enabled on a user's machine.
+	[ "${GITHUB_ACTIONS:-}" = true ] || { echo "CI-only rootfs mode requires GITHUB_ACTIONS" >&2; exit 1; }
+	sudo sh "$W/in/tools/mkrootfs.sh" -i "$W/in" -o "$W/rootfs.tar.gz" -w "$W" \
+		-V "$VERSION" -z "$TZNAME" -a armv7 -A "$APK"
+else
+	unshare -Ur $map sh "$W/in/tools/mkrootfs.sh" -i "$W/in" -o "$W/rootfs.tar.gz" -w "$W" \
+		-V "$VERSION" -z "$TZNAME" -a armv7 -A "$APK"
+fi
 # The path the caller copies from: a Windows path under WSL, a plain one on Linux.
 wslpath -w "$W/rootfs.tar.gz" 2>/dev/null || echo "$W/rootfs.tar.gz"

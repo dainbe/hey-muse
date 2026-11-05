@@ -1,0 +1,9 @@
+Compile-only Go verification checkpoint for official TECHO5 v1.6.26 + initial Muse port. No firmware packaging, signing, flashing or secrets.
+
+Second checkpoint: BlueZ Peripheral + Config export secret handling; no device install.
+
+Third compile checkpoint: isolated Muse audio buffers, optional avatar, experimental Usage deferred.
+
+Fourth checkpoint: validated source integration + avatar and Japanese-language handling.
+
+Fifth checkpoint: optional Wyoming STT Japanese text routing and fail-closed tests.

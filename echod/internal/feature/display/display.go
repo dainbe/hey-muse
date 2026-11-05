@@ -62,6 +62,7 @@ import (
 	"github.com/HuskerMinion/techo5/echod/internal/hardware/ambient"
 	"github.com/HuskerMinion/techo5/echod/internal/hardware/screen"
 	"github.com/HuskerMinion/techo5/echod/internal/hardware/touch"
+	"github.com/HuskerMinion/techo5/echod/internal/lib/avatar"
 	"github.com/HuskerMinion/techo5/echod/internal/lib/fonts"
 	"github.com/HuskerMinion/techo5/echod/internal/lib/hass"
 	"github.com/HuskerMinion/techo5/echod/internal/lib/wifi"
@@ -114,7 +115,8 @@ const (
 )
 
 type Display struct {
-	boost boost // the cores held while the screen is in use (boost.go)
+	avatar *avatar.Set
+	boost  boost // the cores held while the screen is in use (boost.go)
 
 	// camButtons is the camera page's action buttons between taps: the one armed (camera_buttons.go).
 	camButtons cameraButtons
@@ -491,6 +493,7 @@ func build() *Display {
 		shots: make(chan chan *image.RGBA, 4),
 		view:  voice.State{Phase: "idle"},
 	}
+	d.avatar = loadAvatar()
 	d.light.OnCommand = d.command
 	d.auto.OnCommand = func(on bool) { d.setAuto(on, true) }
 	d.buildRoomLights()
@@ -608,7 +611,7 @@ func (d *Display) Name() string { return "screen" }
 // turnShown is whether the turn's picture is the page: nothing drawn before it in render.draw has the
 // screen. Only then does it need its fast frames.
 func turnShown(s scene) bool {
-	return s.eq != nil && s.call.Phase == phone.Idle && !s.ring.any() && !s.setupAsking && !s.bt.Pairing &&
+	return (s.eq != nil || s.avatar != nil) && s.call.Phase == phone.Idle && !s.ring.any() && !s.setupAsking && !s.bt.Pairing &&
 		!s.showWifi && !s.showSheet && !s.showCamera && !s.showAlert && !s.showCalendar && !s.showRadar &&
 		!s.showWeather && !s.showDash && !s.showDeck
 }
@@ -2631,7 +2634,10 @@ func (d *Display) frame() (next time.Duration) {
 		s.cue, s.phase, s.heard, s.reply = cueTurn(s.phase, s.heard, s.reply, captionsOn())
 	}
 	s.said = voice.Spoken(s.reply, now)
-	if equalizerOn() && (s.phase == "listening" || s.phase == "thinking" || s.phase == "replying" || s.phase == "lingering") {
+	if _, turn := avatar.ForPhase(s.phase); turn && avatarOn() {
+		s.avatar = d.avatar
+	}
+	if s.avatar == nil && equalizerOn() && (s.phase == "listening" || s.phase == "thinking" || s.phase == "replying" || s.phase == "lingering") {
 		s.eq = eqFor(s.phase, nightNow(now), now)
 		s.eq.wave = waveOn()
 	}
@@ -2956,7 +2962,10 @@ func (d *Display) frame() (next time.Duration) {
 	if (s.slideshow != nil || s.slideshowScreensaver != nil) && home.Get().SlideshowTransitioning() {
 		return home.SlideshowFrame
 	}
-	if turnShown(s) && !(s.phase == "lingering" && s.eq.quiet && faceSettled(s.eq)) {
+	if turnShown(s) && s.avatar != nil {
+		return d.r.av.Until(s.avatar.Manifest, time.Now())
+	}
+	if turnShown(s) && s.eq != nil && !(s.phase == "lingering" && s.eq.quiet && faceSettled(s.eq)) {
 		if s.eq.wave || s.eq.style == "orb" || s.eq.style == "face" {
 			return waveFrame // ten a second: the orb and the face are soft and need no more
 		}

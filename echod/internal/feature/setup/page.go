@@ -3,6 +3,7 @@ package setup
 import (
 	"context"
 	"crypto/subtle"
+	"encoding/json"
 	"fmt"
 	"html"
 	"log/slog"
@@ -19,6 +20,7 @@ import (
 	"github.com/HuskerMinion/techo5/echod/internal/feature/diag"
 	"github.com/HuskerMinion/techo5/echod/internal/feature/home"
 	"github.com/HuskerMinion/techo5/echod/internal/feature/media"
+	gadget "github.com/HuskerMinion/techo5/echod/internal/feature/muse"
 	"github.com/HuskerMinion/techo5/echod/internal/feature/timezone"
 	"github.com/HuskerMinion/techo5/echod/internal/feature/web"
 	"github.com/HuskerMinion/techo5/echod/internal/hardware/speaker"
@@ -199,7 +201,12 @@ func (f *Feature) state(w http.ResponseWriter, r *http.Request) {
 	_, in := f.session(r)
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Cache-Control", "no-store")
-	fmt.Fprintf(w, `{"in":%t,"waiting":%t}`+"\n", in, f.Waiting())
+	state := map[string]any{"in": in, "waiting": f.Waiting()}
+	if in {
+		status := gadget.Get().Status()
+		state["muse"], state["muse_phase"] = museWords(status), status.Phase.String()
+	}
+	_ = json.NewEncoder(w).Encode(state)
 }
 
 // save takes the forms. Every write names the setting it changes; nothing here touches keys, runs a
@@ -276,6 +283,8 @@ func (f *Feature) save(w http.ResponseWriter, r *http.Request) {
 		problem = saveUpdates(what, r.PostFormValue("auto") == "yes")
 	case "brain":
 		problem = saveBrain(r)
+	case "muse-pair", "muse-cancel", "muse-unpair":
+		problem = saveMusePairing(what)
 	case "music":
 		problem = saveMusic(r)
 	case "streaming":
@@ -444,6 +453,7 @@ func (f *Feature) settingsPage(ctx context.Context, w http.ResponseWriter, token
 		if layout.HasMicrophone() {
 			fmt.Fprint(w, `<h3>Voice</h3>`)
 			brainSection(w, token)
+			musePairingSection(w, token)
 			replyPlayerSection(w, token)
 			realtimeSection(w, token)
 			listeningSection(w, token)

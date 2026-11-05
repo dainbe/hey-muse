@@ -1,0 +1,11 @@
+One-time public runner build of an unsigned preview tarball (no deploy, sign, flash, release or keys). Triggered after CI green. Do not repeat without reviewing artifact/storage costs.
+
+Second preflight: retry after synchronizing Muse pairing lifecycle test and isolating OTA feed to dainbe/hey-muse.
+
+Third bounded build checkpoint: use Ubuntu 26.04 qemu-user-binfmt provider for ARMv7 rootfs packaging.
+
+Fourth bounded preview: reuse SHA256-verified official v1.6.26 native helpers; no rebuild of Zig/FFmpeg/Tailscale on CI.
+
+Fifth and final bounded preview for now: use uidmap and explicit 0:42 owner-map test before rootfs build.
+
+Sixth bounded preview: CI-only explicit rootfs assembly in ephemeral hosted runner, unchanged local rootless WSL path.

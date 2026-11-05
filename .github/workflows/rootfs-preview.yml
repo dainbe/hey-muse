@@ -1,0 +1,86 @@
+name: Manual unsigned cronos rootfs preview
+
+# Explicitly manual. This workflow DOES NOT install, sign or publish firmware.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cronos-rootfs-preview
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Checkout integration branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Go toolchain from module
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: echod/go.mod
+          cache-dependency-path: echod/go.sum
+      - name: Verify source
+        working-directory: echod
+        run: go test ./...
+      - name: Install rootfs cross-build tools
+        run: |
+          sudo apt-get update
+          # Ubuntu 26.04 exposes qemu-user-static as a virtual package.
+          sudo apt-get install -y --no-install-recommends qemu-user-binfmt binfmt-support
+      - name: Fetch public rootfs inputs
+        run: |
+          python3 tools/fetch-inputs.py --device show
+          mkdir -p "$HOME/apk" build
+          cp inputs/apk.static "$HOME/apk/apk.static"
+      - name: Reuse verified upstream v1.6.26 native helpers
+        # The official signed stable rootfs already contains the same helpers.
+        # Avoid recompiling Zig/AirPlay 2, FFmpeg and Tailscale on ephemeral CI.
+        run: |
+          set -euo pipefail
+          base="https://github.com/HuskerMinion/techo5/releases/download/v1.6.26"
+          curl -fLsS --retry 3 --retry-delay 2 "$base/SHA256SUMS" -o build/UPSTREAM-SHA256SUMS
+          curl -fLsS --retry 3 --retry-delay 2 "$base/rootfs-v1.6.26.tar.gz" -o build/rootfs-v1.6.26.tar.gz
+          grep -F 'rootfs-v1.6.26.tar.gz' build/UPSTREAM-SHA256SUMS | head -1 | awk '{print $1 "  rootfs-v1.6.26.tar.gz"}' > build/verify-rootfs.sha256
+          (cd build && sha256sum -c verify-rootfs.sha256)
+          tar -tzf build/rootfs-v1.6.26.tar.gz > build/UPSTREAM-CONTENTS.txt
+          mkdir -p bin
+          extract_helper() {
+            local src="$1" dest="$2" entry
+            entry=$(awk -v src="usr/local/bin/$src" '($0 == src || $0 == "./" src) {print; exit}' build/UPSTREAM-CONTENTS.txt)
+            if [ -z "$entry" ]; then
+              echo "Official rootfs missing required helper: $src" >&2
+              exit 1
+            fi
+            tar -xOzf build/rootfs-v1.6.26.tar.gz "$entry" > "bin/$dest"
+            chmod 755 "bin/$dest"
+            file "bin/$dest"
+          }
+          extract_helper techo5-shairport-sync techo5-shairport-sync-arm
+          extract_helper techo5-nqptp techo5-nqptp-arm
+          extract_helper techo5-ffmpeg techo5-ffmpeg-arm
+          extract_helper tailscaled tailscaled-arm64
+          license_entry=$(awk '($0 ~ /(^|\/)usr\/share\/licenses\/tailscale\/LICENSE$/) {print; exit}' build/UPSTREAM-CONTENTS.txt)
+          if [ -z "$license_entry" ]; then echo "Official Tailscale LICENSE is missing" >&2; exit 1; fi
+          tar -xOzf build/rootfs-v1.6.26.tar.gz "$license_entry" > bin/tailscaled-arm64.LICENSE
+          sha256sum bin/techo5-shairport-sync-arm bin/techo5-nqptp-arm bin/techo5-ffmpeg-arm bin/tailscaled-arm64 > build/HELPER-SHA256SUMS
+
+      - name: Build unsigned rootfs for inspection
+        run: |
+          TECHO5_CI_ROOTFS_SUDO=1 bash tools/linux/deploy-rootfs.sh --out build/rootfs.tar.gz --version v1.6.26-muse.preview
+          sha256sum build/rootfs.tar.gz > build/SHA256SUMS
+          tar -tzf build/rootfs.tar.gz > build/CONTENTS.txt
+      - name: Upload short-lived preview artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: UNSIGNED-DO-NOT-INSTALL-cronos-rootfs-preview
+          path: |
+            build/rootfs.tar.gz
+            build/SHA256SUMS
+            build/CONTENTS.txt
+            build/HELPER-SHA256SUMS
+          retention-days: 1
+          if-no-files-found: error

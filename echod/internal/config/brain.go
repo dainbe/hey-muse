@@ -47,6 +47,8 @@ type Brain struct {
 	// household wants it to know.
 	Prompt string `json:"prompt,omitempty"`
 
+	Muse Muse `json:"muse"`
+
 	// ReplyPlayer is a Home Assistant media_player entity id that the assistant's spoken replies play
 	// on instead of this device's speaker. Empty is this device's own speaker.
 	ReplyPlayer string `json:"reply_player,omitempty"`
@@ -71,17 +73,31 @@ func ValidReplyPlayer(s string) (string, bool) {
 	return s, true
 }
 
+type Muse struct {
+	SDKToken string `json:"sdk_token,omitempty"`
+	Speech   Speech `json:"speech"`
+}
+type Speech struct {
+	Base  string `json:"base,omitempty"`
+	Model string `json:"model,omitempty"`
+	Voice string `json:"voice,omitempty"`
+	Style string `json:"style,omitempty"`
+	Key   string `json:"key,omitempty"`
+}
 type BrainMode string
 
 const (
 	BrainHomeAssistant BrainMode = ""
 	BrainDirect        BrainMode = "direct"
+	BrainMuse          BrainMode = "muse"
 )
 
 // Direct is whether turns go to the direct pipeline, and it is set up enough to run one.
 func (b Brain) Direct() bool {
 	return b.Mode == BrainDirect && b.STT != "" && b.TTS != "" && b.LLM != ""
 }
+
+func (b Brain) Standalone() bool { return b.Direct() || b.Mode == BrainMuse }
 
 type BrainWriter struct{ st *Store }
 
@@ -90,9 +106,10 @@ type BrainWriter struct{ st *Store }
 func (w BrainWriter) Set(b Brain) error {
 	return w.st.Update(func(c *Config) {
 		key, player := c.Brain.Key, c.Brain.ReplyPlayer
+		sdk, speechKey := c.Brain.Muse.SDKToken, c.Brain.Muse.Speech.Key
 		c.Brain = b
-		c.Brain.Key = key
-		c.Brain.ReplyPlayer = player
+		c.Brain.Key, c.Brain.ReplyPlayer = key, player
+		c.Brain.Muse.SDKToken, c.Brain.Muse.Speech.Key = sdk, speechKey
 	})
 }
 
@@ -114,6 +131,16 @@ func (w BrainWriter) SetReplyPlayer(id string) error {
 
 func (w BrainWriter) SetKey(key string) error {
 	return w.st.Update(func(c *Config) { c.Brain.Key = key })
+}
+
+func (w BrainWriter) SetSDKToken(token string) error {
+	return w.st.Update(func(c *Config) { c.Brain.Muse.SDKToken = token })
+}
+func (w BrainWriter) SetSpeechKey(key string) error {
+	return w.st.Update(func(c *Config) { c.Brain.Muse.Speech.Key = key })
+}
+func (w BrainWriter) SetSpeechVoice(voice string) error {
+	return w.st.Update(func(c *Config) { c.Brain.Muse.Speech.Voice = voice })
 }
 
 // NewsSource is one news update the assistant can play: a name, and its podcast feed.

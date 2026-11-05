@@ -27,6 +27,9 @@ type backend interface {
 	Name() string
 }
 
+// excuser reports a reason when a voice backend is temporarily unavailable.
+type excuser interface{ Excuse() string }
+
 // ha is Home Assistant's pipeline. watch opens a run at the wake word stage instead (hawake.go), and
 // ready stands in for the satellite's subscription where a test has none, as start does for the
 // request that opens a turn.
@@ -64,8 +67,12 @@ func (c *conversation) backendFor(slot int) backend {
 	if w := config.Get().Wake.Words; slot >= 0 && slot < len(w) && w[slot].Realtime {
 		return c.realtime
 	}
-	if config.Get().Brain.Direct() {
+	b := config.Get().Brain
+	if b.Direct() {
 		return c.direct
+	}
+	if b.Mode == config.BrainMuse {
+		return c.muse
 	}
 	return c.ha
 }
@@ -80,7 +87,7 @@ func (c *conversation) onHA() bool {
 // it: the device's own, not Home Assistant's run.
 func (c *conversation) stopsAtOnce() bool {
 	switch c.be.(type) {
-	case *direct, *rtBackend:
+	case *direct, *rtBackend, *viaMuse:
 		return true
 	}
 	return false

@@ -17,6 +17,7 @@ import (
 	"github.com/HuskerMinion/techo5/echod/internal/feature/feedback"
 	"github.com/HuskerMinion/techo5/echod/internal/feature/light"
 	"github.com/HuskerMinion/techo5/echod/internal/feature/media"
+	gadget "github.com/HuskerMinion/techo5/echod/internal/feature/muse"
 	"github.com/HuskerMinion/techo5/echod/internal/feature/mute"
 	"github.com/HuskerMinion/techo5/echod/internal/feature/phone"
 	"github.com/HuskerMinion/techo5/echod/internal/feature/recording"
@@ -153,6 +154,7 @@ type conversation struct {
 	// running against (backend.go). be is chosen as a turn opens and is only the loop's to change.
 	ha     ha
 	direct *direct
+	muse   *viaMuse
 	// realtime answers a slot chosen for realtime voice (realtime.go).
 	realtime *rtBackend
 	be       backend
@@ -366,6 +368,7 @@ func newConversation(vs *esphome.VoiceSatellite) *conversation {
 	}
 	c.ha = ha{vs: vs, watch: c.startWatch}
 	c.direct = newDirect(c.post)
+	c.muse = newViaMuse(gadget.Get(), museVoice, speakMuse, c.post)
 	c.realtime = newRealtime(c.postSure)
 	c.be = c.ha
 
@@ -1057,7 +1060,7 @@ func endpointSettings() endpoint.Settings {
 // after a wake word and with End of speech on the device on.
 func deviceEnds(be backend, followUp bool) bool {
 	switch be.(type) {
-	case *direct, *rtBackend:
+	case *direct, *rtBackend, *viaMuse:
 		return true
 	}
 	return !followUp && !config.Get().Microphone.PipelineEnds
