@@ -312,7 +312,9 @@ func saveBrain(r *http.Request) string {
 			return u.what + " should be an address like " + u.like
 		}
 	}
-	if _, err := b.NewsSources(); err != nil { return "news updates: " + err.Error() }
+	if _, err := b.NewsSources(); err != nil {
+		return "news updates: " + err.Error()
+	}
 	if b.Mode == config.BrainDirect && (b.STT == "" || b.TTS == "" || b.LLM == "") {
 		return "answering directly needs all three: speech to text, text to speech and the chat model"
 	}

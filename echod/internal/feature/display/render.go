@@ -47,9 +47,9 @@ type scene struct {
 	listening bool // the room is being listened to in a browser (feature/babymon)
 
 	now     time.Time
-	phase   string  // idle, listening, thinking, replying, lingering
-	eq      *eqView // a turn's bars, when turns are drawn as the equalizer
-	cue     string  // a turn's phase, when turns are a cue over the page and phase is idle (turn_cue.go)
+	phase   string      // idle, listening, thinking, replying, lingering
+	eq      *eqView     // a turn's bars, when turns are drawn as the equalizer
+	cue     string      // a turn's phase, when turns are a cue over the page and phase is idle (turn_cue.go)
 	avatar  *avatar.Set // optional Muse sprite set for turn animation
 	heard   string
 	reply   string
@@ -743,7 +743,9 @@ func (r *renderer) draw(s scene) {
 	}
 
 	if r.turnAvatar(s) {
-		if s.showVolume { r.volumeBar(s) }
+		if s.showVolume {
+			r.volumeBar(s)
+		}
 		return
 	}
 	var behind *image.RGBA // the photo behind the idle page, when it has one

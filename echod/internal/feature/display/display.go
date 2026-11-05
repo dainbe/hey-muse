@@ -116,7 +116,7 @@ const (
 
 type Display struct {
 	avatar *avatar.Set
-	boost boost // the cores held while the screen is in use (boost.go)
+	boost  boost // the cores held while the screen is in use (boost.go)
 
 	// camButtons is the camera page's action buttons between taps: the one armed (camera_buttons.go).
 	camButtons cameraButtons

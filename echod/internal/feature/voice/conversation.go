@@ -154,7 +154,7 @@ type conversation struct {
 	// running against (backend.go). be is chosen as a turn opens and is only the loop's to change.
 	ha     ha
 	direct *direct
-	muse *viaMuse
+	muse   *viaMuse
 	// realtime answers a slot chosen for realtime voice (realtime.go).
 	realtime *rtBackend
 	be       backend

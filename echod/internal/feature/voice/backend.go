@@ -28,7 +28,7 @@ type backend interface {
 }
 
 // excuser reports a reason when a voice backend is temporarily unavailable.
-type excuser interface { Excuse() string }
+type excuser interface{ Excuse() string }
 
 // ha is Home Assistant's pipeline. watch opens a run at the wake word stage instead (hawake.go), and
 // ready stands in for the satellite's subscription where a test has none, as start does for the

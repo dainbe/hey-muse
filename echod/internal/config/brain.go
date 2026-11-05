@@ -75,14 +75,14 @@ func ValidReplyPlayer(s string) (string, bool) {
 
 type Muse struct {
 	SDKToken string `json:"sdk_token,omitempty"`
-	Speech Speech `json:"speech"`
+	Speech   Speech `json:"speech"`
 }
 type Speech struct {
-	Base string `json:"base,omitempty"`
+	Base  string `json:"base,omitempty"`
 	Model string `json:"model,omitempty"`
 	Voice string `json:"voice,omitempty"`
 	Style string `json:"style,omitempty"`
-	Key string `json:"key,omitempty"`
+	Key   string `json:"key,omitempty"`
 }
 type BrainMode string
 

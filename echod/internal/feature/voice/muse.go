@@ -47,10 +47,10 @@ type museTextLink interface {
 const museChunk = mic.Rate / 10
 
 type viaMuse struct {
-	link  museLink
-	voice func() speech.Voice // the one the settings choose, asked for every reply
-	speak speakFunc
-	post  func(event)
+	link      museLink
+	voice     func() speech.Voice // the one the settings choose, asked for every reply
+	speak     speakFunc
+	post      func(event)
 	recognize func(context.Context, config.Brain, []byte) (string, error) // testable STT provider
 	utterance
 }
@@ -116,7 +116,9 @@ func (m *viaMuse) askWithBrain(ctx context.Context, b config.Brain, pcm []byte, 
 		return muse.Reply{Text: "音声認識を利用できません。"}, nil
 	}
 	recognize := m.recognize
-	if recognize == nil { recognize = transcribe }
+	if recognize == nil {
+		recognize = transcribe
+	}
 	text, err := recognize(ctx, b, pcm)
 	if ctx.Err() != nil {
 		return muse.Reply{}, ctx.Err()
