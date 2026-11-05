@@ -33,7 +33,11 @@ The integration branch was created *directly from the official stable commit*, n
 - Rootfs preview `42080449780`: verified Go tests, ARM cross-compile, QEMU package setup and public inputs, but failed because mandatory AirPlay 2 helper binaries were not yet staged.
 - Rootfs preview `42081277834`: verified official `rootfs-v1.6.26.tar.gz` with its published SHA256SUMS; extracted official AirPlay 2, FFmpeg, Tailscale helpers (confirmed ARMv7/arm64). Hit GitHub runner UID/GID ownership restrictions during Alpine rootfs extraction.
 - Rootfs preview `42081730021`: failed a CI-only namespace `chown 0:42` preflight. Left normal WSL rootless mode unchanged; explicit temporary GitHub Runner sudo build mode now available.
-- Rootfs preview `42082277352` launched using that isolated runner-only mode, result pending at this update. **Never install** unsigned preview output before hardware safety gate and explicit approval.
+- Rootfs preview `42081277834`: **failed** Alpine service-user ownership in a rootless GitHub Runner namespace. Separate developer WSL default remains rootless.
+- Rootfs preview `42081730021`: CI-only `chown 0:42` preflight confirmed hosted-runner UID/GID mapping limitation, no device touched.
+- **Rootfs preview `42082277352`: success** — all Go tests, QEMU setup, public input fetch, pinned official v1.6.26 SHA256-verified helpers, complete custom unsigned rootfs tar, SHA256SUMS/CONTENTS and 1-day-retention artifact upload. Artifact ID `13441421638`, 49,303,810 bytes; expires at `2026-11-06T18:16:23Z`. [Run](https://github.com/dainbe/hey-muse/actions/runs/42082277352).
+- Rootfs generated in a **temporary GitHub-hosted runner only**; isolated opt-in `TECHO5_CI_ROOTFS_SUDO=1` used for packages that require file ownership IDs. Default developer WSL path stays rootless. Heavy workflow restored to manual-only.
+- **Never install** unsigned preview output before hardware safety gate and explicit approval; no physical Echo STT/TTS operation is verified.
 - Workflow `.github/workflows/port-ci.yml` performs Go tests and ARMv7 compile only; no signing, auto-installation or artifact upload. Trigger manually or by editing `.ci/run-integration`.
 
 ## Outstanding integration
@@ -43,7 +47,8 @@ The integration branch was created *directly from the official stable commit*, n
 - [x] Optional Wyoming STT text path implemented and tested offline (including no audio upload after local STT failure).
 - [ ] Japanese STT model deployment and real-device benchmark (Moonshine Tiny/Base, independent alternatives) pending.
 - [ ] Japanese TTS: set a trusted Japanese-capable speech endpoint first. Built-in Pico is **English-only**, cannot serve as Japanese fallback. Investigate local Open JTalk/other engines separately.
-- [ ] Document full rootfs packaging, signing, migration and rollback; treat trusted release keys as versioned trust roots and do not embed a private signing key or token.
+- [x] Compile and stage a reproducible **unsigned preview** rootfs using official signed stable helpers and public inputs; [run #42082277352](https://github.com/dainbe/hey-muse/actions/runs/42082277352).
+- [ ] Owner-controlled signing, pairing migration and A/B rollback procedure; no private signing key or token may be committed.
 - [ ] Before install: read-only `slotctl status`, free space, kernel/arch, current update source, pairing state, and backupability; require explicit owner approval for **every write**, reboot and pairing change.
 - [ ] Hardware verification: voice input -> Japanese transcript -> Japanese Muse answer -> Japanese speaker output; test reconnect/OTA fallback; memory and latency.
 
@@ -56,7 +61,7 @@ Public repository standard GitHub-hosted Linux runners do not consume private-re
 Current Echo firmware (user reported) is `v1.2.0-muse.3`; this repository work **does not change the device**. The persistent Muse pairing state is `layout.StateDir + "/muse.json"`; inspect/backup securely on-device only, never print or commit it.
 
 ## Next owner checkpoint
-Once compile and code review are complete, present a non-destructive list of hardware inspection commands and explain exactly what the future firmware write will change, what data is preserved, and how to recover. Owner must explicitly approve install/slot switch/reboot. Maintain this document with real test evidence, not predictions.
+Offline Build + CI compilation and unsigned rootfs preview are complete. The next gate is **owner-assisted read-only device preflight, followed by an explicit approval decision**. Once compile and code review are complete, present a non-destructive list of hardware inspection commands and explain exactly what the future firmware write will change, what data is preserved, and how to recover. Owner must explicitly approve install/slot switch/reboot. Maintain this document with real test evidence, not predictions.
 
 ## OTA isolation
 This branch points `releases_cronos.go` at this fork's empty Release feed; owner-controlled signing and migration from the old Muse trust key remain pending.
