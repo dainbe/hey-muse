@@ -116,7 +116,7 @@ func brainSection(w http.ResponseWriter, token string) {
 	case !builtInVoice():
 		fmt.Fprint(w, `<p class="note">This image has no built-in voice, so Muse needs a speech key to answer aloud.</p>`)
 	case m.Speech.Key == "":
-		fmt.Fprint(w, `<p class="note">With no speech key, Muse's answers use the built-in English voice (not suitable for Japanese replies).</p>`)
+		fmt.Fprint(w, `<p class="note">With no speech key, Muse's answers use the built-in voice (English-only; not suitable for Japanese replies).</p>`)
 	}
 	fmt.Fprintf(w, `
 	 <label for="speechstyle">How to say it</label>
