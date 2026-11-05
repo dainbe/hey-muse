@@ -48,7 +48,7 @@ The integration branch was created *directly from the official stable commit*, n
 ## Formatting and device-tag CI follow-up
 - Full PR check `42126780427` completed all `go build` and `go vet` variants (show, dot, dot+donut, spot, panel), including the two corrected variable paths. Its only failure was `gofmt -l` reporting nine integration-edited Go files.
 - A one-time, exact-path formatter workflow `42127654760` applied `gofmt` to only those nine files and committed `523c2d79483fcc2241d89fa211000e1b318f968a` to the integration branch. It did not rebuild/flash firmware or touch baseline/Muse branches.
-- Final PR check after formatting: pending at this documentation commit.
+- **Final PR check `42127736906`: SUCCESS**. All Go Build/Vet tag variants (show, dot, dot+donut, spot, panel), gofmt, translation status, installer tests, and Docker-based boot layer tests passed. No firmware install, signed release, or physical-device tests were run.
 
 ## Outstanding integration
 - [x] All `go test ./...` and ARMv7 daemon compile green on pinned v1.6.26 (run `42079152900`, Go 1.27 module).
