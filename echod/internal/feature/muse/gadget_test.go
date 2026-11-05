@@ -86,6 +86,14 @@ func start(t *testing.T, mode config.BrainMode, serve func(context.Context, muse
 	done := make(chan struct{})
 	go func() { defer close(done); _ = f.Run(ctx) }()
 	t.Cleanup(func() { cancel(); <-done })
+	// The test goroutine may not have entered Run by the time a pairing
+	// assertion starts. Synchronize with its actual startup rather than
+	// depending on the scheduler (notably on fresh CI runners).
+	await(t, f, "Muse feature Run started", func(Status) bool {
+		f.mu.Lock()
+		defer f.mu.Unlock()
+		return f.ctx != nil
+	})
 	return f, made
 }
 
