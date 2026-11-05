@@ -276,6 +276,9 @@ func (v *Voice) CanAnswer(slot int) bool {
 	if config.Get().Brain.Direct() {
 		return true
 	}
+	if config.Get().Brain.Mode == config.BrainMuse {
+		return v.turn != nil && v.turn.muse != nil && v.turn.muse.Ready()
+	}
 	return slot >= 0 && slot < len(v.ActiveWakeWords())
 }
 
