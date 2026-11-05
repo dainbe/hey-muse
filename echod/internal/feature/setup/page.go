@@ -276,6 +276,8 @@ func (f *Feature) save(w http.ResponseWriter, r *http.Request) {
 		problem = saveUpdates(what, r.PostFormValue("auto") == "yes")
 	case "brain":
 		problem = saveBrain(r)
+	case "muse-pair", "muse-cancel", "muse-unpair":
+		problem = saveMusePairing(what)
 	case "music":
 		problem = saveMusic(r)
 	case "streaming":
@@ -444,6 +446,7 @@ func (f *Feature) settingsPage(ctx context.Context, w http.ResponseWriter, token
 		if layout.HasMicrophone() {
 			fmt.Fprint(w, `<h3>Voice</h3>`)
 			brainSection(w, token)
+			musePairingSection(w, token)
 			replyPlayerSection(w, token)
 			realtimeSection(w, token)
 			listeningSection(w, token)
