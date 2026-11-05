@@ -29,7 +29,8 @@ The integration branch was created *directly from the official stable commit*, n
 - Third run `42077501584`: failed on two original Muse Setup assertions (English built-in voice warning and pairing status JSON), fixed.
 - Fourth run `42078299872`: **success** — Go unit tests and ARMv7 cross-build.
 - Fifth run `42079152900`: **success** — after adding swappable Wyoming STT → Muse text requests, fail-closed audio handling and offline unit tests. These are source/compile validations only; no device or end-to-end speech verification.
-- One manual-gated, unsigned preview rootfs build `42079486348` triggered after green CI; do **not** install its artifact without independent hardware safety gate and approval.
+- Unsigned preview run `42079486348` failed on a Muse pairing test race, fixed by waiting for fixture `Run` startup. Next `42079935858` passed Go tests but Ubuntu 26.04 runner no longer offers a concrete `qemu-user-static` package; changed to `qemu-user-binfmt`, confirmed by official Ubuntu package index.
+- Third bounded unsigned preview run `42080449780` launched after fixes; packaging result pending at this update. **Never install** an unsigned preview artifact before hardware safety gate and explicit approval.
 - Workflow `.github/workflows/port-ci.yml` performs Go tests and ARMv7 compile only; no signing, auto-installation or artifact upload. Trigger manually or by editing `.ci/run-integration`.
 
 ## Outstanding integration
@@ -53,3 +54,6 @@ Current Echo firmware (user reported) is `v1.2.0-muse.3`; this repository work *
 
 ## Next owner checkpoint
 Once compile and code review are complete, present a non-destructive list of hardware inspection commands and explain exactly what the future firmware write will change, what data is preserved, and how to recover. Owner must explicitly approve install/slot switch/reboot. Maintain this document with real test evidence, not predictions.
+
+## OTA isolation
+This branch now points `releases_cronos.go` at the fork; owner-controlled signing trust remains pending.
