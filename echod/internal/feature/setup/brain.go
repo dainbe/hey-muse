@@ -62,7 +62,8 @@ func brainSection(w http.ResponseWriter, token string) {
 	  devices, and the answer to a text-to-speech server. The servers are Wyoming ones, as Home Assistant
 	  uses (faster-whisper, Piper), and any chat model with an OpenAI-style endpoint (llama.cpp, Ollama).</p>
 	 <label for="stt">Speech to text (host:port)</label>
-	 <input id="stt" name="stt" value="%s" placeholder="192.168.1.20:10300" autocomplete="off">
+	 <input id="stt" name="stt" value="%s" placeholder="127.0.0.1:50024" autocomplete="off">
+	 <p class="note">Also applies to Muse. Use a Wyoming STT server here for local Japanese transcription sent as text; leave blank for Muse voice-note recognition. If the configured local STT fails, the audio stays on this device rather than silently being uploaded.</p>
 	 <label for="tts">Text to speech (host:port)</label>
 	 <input id="tts" name="tts" value="%s" placeholder="192.168.1.20:10200" autocomplete="off">
 	 <label for="voice">Voice</label>
