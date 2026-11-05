@@ -1,0 +1,46 @@
+name: One-time gofmt of the nine Muse integration files
+on:
+  push:
+    branches:
+      - ci/gofmt-once-20261106
+    paths:
+      - .ci/format-once
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout integration branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: integration/techo5-v1.6.26-muse
+          persist-credentials: true
+      - name: Format only identified changed Go files
+        run: |
+          set -euo pipefail
+          files=(
+            echod/internal/config/brain.go
+            echod/internal/feature/display/display.go
+            echod/internal/feature/display/render.go
+            echod/internal/feature/setup/brain.go
+            echod/internal/feature/setup/page.go
+            echod/internal/feature/voice/backend.go
+            echod/internal/feature/voice/conversation.go
+            echod/internal/feature/voice/muse.go
+            echod/internal/feature/voice/muse_local_stt_test.go
+          )
+          command -v gofmt
+          gofmt -w "${files[@]}"
+          git add -- "${files[@]}"
+          if git diff --cached --quiet; then
+            echo "No formatting changes necessary"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "style(muse): apply gofmt to forward-port sources [skip ci]"
+          git push origin HEAD:refs/heads/integration/techo5-v1.6.26-muse
